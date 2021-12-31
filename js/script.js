@@ -29,10 +29,10 @@ function menuToggle(ele){
 }
 
 var navLinks = document.querySelectorAll('.m-link')
-console.log(navLinks)
+
 navLinks.forEach(nav =>{
     nav.addEventListener('mouseover',()=>{
-        console.log('grow')
+       
         cur.classList.add('large')
     })
     nav.addEventListener('mouseleave',()=>{

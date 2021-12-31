@@ -244,7 +244,7 @@ h4{
 }
 
 .hero .name::before{
-    content:"Hello I'm";
+    content:"Hello, I'm";
     font-size:2rem;
     position:absolute;
     top:-10px;
@@ -353,10 +353,11 @@ margin-bottom:0;
 .accordion .desc{
     position: relative;
     max-height: 0;
-    font-size: 20px;
-    text-align: justify;
+    font-weight: 300;
+    text-align: left;
     overflow: hidden;
     transition: all  0.5s ease-in-out;
+    padding-top:1rem;
 
    
 }
@@ -400,17 +401,12 @@ footer input:focus:active:visited{
         margin-bottom:2rem;
     }
     .hero .name::before{
-        content:"Hello I'm";
         font-size:2rem;
-        position:absolute;
         top:-68px;
         font-weight: 400;
-        
     }
     .hero .name::after{
-        content:"Designer X Developer";
         font-size:2rem;
-        position:absolute;
         bottom:-64px;
         left:0px;
         font-weight: 400;
@@ -481,7 +477,12 @@ footer input:focus:active:visited{
 .hero .content .btn{
     margin-bottom:2rem;
 }
-
+ .aboutme{
+     text-align: center;
+ }
+ .skill ul{
+     padding-left: 4rem;
+ }
 }
 @media only screen and (max-device-width:424px){
     .hero .name{
