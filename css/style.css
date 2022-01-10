@@ -4,12 +4,14 @@
 } */
 *::selection
 {
- background-color:var(--green);
-color:var(--white);
+ background-color:#FBF46D;
+color:var(--black);
 }
 :root{
     --black:#090e11;
     --white:#ffffff;
+    /* --black:#ffffff;
+    --white:#090e11; */
     --green:#074a4d;
     --num:#ff6767;
 }
@@ -60,6 +62,7 @@ body{
     font-family: 'Poppins', sans-serif;
     color:var(--black);
     font-size: 18px;
+    background-color: var(--white);
 }
 a{
     text-decoration: none;
@@ -400,6 +403,11 @@ footer input:focus:active:visited{
     background-color: var(--green);
     text-align: center;
     padding: .5rem;
+}
+.social{
+    height:2rem;
+    filter:invert();
+    margin:.5rem;
 }
 
 
