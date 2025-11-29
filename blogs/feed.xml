@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+    <title>Ritesh Sharma - Blogs</title>
+    <link>https://riteshsharma.me</link>
+    <description>Latest blogs content</description>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 29 Nov 2025 19:57:14 +0000</lastBuildDate>
+    <atom:link href="https://riteshsharma.me/blogs/feed.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+        <title>The Hidden Cost of Speed: Mastering Latency in the Request Lifecycle</title>
+        <link>https://riteshsharma.me/blog/understanding-latency-request-lifecycle.html</link>
+        <description>Breaking down the time cost of every step in a request's journey, from CPU cache to global networks, and why network optimization matters $10^6$ times more than CPU optimization.</description>
+        <pubDate>Tue, 25 Nov 2025 00:00:00 +0000</pubDate>
+        <guid>https://riteshsharma.me/blog/understanding-latency-request-lifecycle.html</guid>
+        
+        <category>Performance</category>
+        
+    </item>
+    
+    <item>
+        <title>Optimizing the Data Core - Strategic Indexing of Variable-Length Character Fields</title>
+        <link>https://riteshsharma.me/blog/strategic-indexing-varchar-fields.html</link>
+        <description>Advanced techniques for indexing VARCHAR and TEXT fields in high-performance database systems, focusing on healthcare and finance applications where efficiency is critical.</description>
+        <pubDate>Sat, 15 Nov 2025 00:00:00 +0000</pubDate>
+        <guid>https://riteshsharma.me/blog/strategic-indexing-varchar-fields.html</guid>
+        
+        <category>Database</category>
+        
+    </item>
+    
+    <item>
+        <title>Optimizing the Data Core - A Deep Dive into PostgreSQL Index Types for Elite Performance</title>
+        <link>https://riteshsharma.me/blog/postgresql-index-types-performance.html</link>
+        <description>A comprehensive guide to PostgreSQL's index types, their mechanics, and strategic deployment for high-performance database applications in healthcare and finance.</description>
+        <pubDate>Mon, 10 Nov 2025 00:00:00 +0000</pubDate>
+        <guid>https://riteshsharma.me/blog/postgresql-index-types-performance.html</guid>
+        
+        <category>Database</category>
+        
+    </item>
+    
+</channel>
+</rss>
