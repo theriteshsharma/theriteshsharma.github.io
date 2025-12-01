@@ -105,97 +105,49 @@ document.addEventListener('DOMContentLoaded', function() {
         createProgressBar();
     }
     
-    // Mobile menu toggle
-    const createMobileMenu = () => {
-        const navbar = document.querySelector('.navbar');
-        const navMenu = document.querySelector('.nav-menu');
+    // Clean mobile menu toggle
+    const initMobileMenu = () => {
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
         
-        if (!navbar || !navMenu) return;
+        if (!menuToggle || !navLinks) return;
         
-        const menuButton = document.createElement('button');
-        menuButton.className = 'menu-toggle';
-        menuButton.innerHTML = `
-            <span></span>
-            <span></span>
-            <span></span>
-        `;
-        menuButton.style.cssText = `
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-        `;
+        const toggleMenu = () => {
+            const isActive = navLinks.classList.contains('active');
+            navLinks.classList.toggle('active');
+            menuToggle.setAttribute('aria-expanded', !isActive);
+            menuToggle.textContent = isActive ? '☰' : '×';
+        };
         
-        const spans = menuButton.querySelectorAll('span');
-        spans.forEach(span => {
-            span.style.cssText = `
-                display: block;
-                width: 24px;
-                height: 2px;
-                background: #1f2937;
-                transition: transform 0.3s;
-            `;
-        });
+        const closeMenu = () => {
+            navLinks.classList.remove('active');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            menuToggle.textContent = '☰';
+        };
         
-        navbar.querySelector('.container').appendChild(menuButton);
+        menuToggle.addEventListener('click', toggleMenu);
         
-        // Mobile styles
-        const style = document.createElement('style');
-        style.textContent = `
-            @media (max-width: 768px) {
-                .menu-toggle {
-                    display: flex !important;
-                }
-                
-                .nav-menu {
-                    display: none;
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    right: 0;
-                    background: white;
-                    flex-direction: column;
-                    padding: 1rem;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                }
-                
-                .nav-menu.active {
-                    display: flex;
-                }
-                
-                .menu-toggle.active span:nth-child(1) {
-                    transform: rotate(45deg) translate(6px, 6px);
-                }
-                
-                .menu-toggle.active span:nth-child(2) {
-                    opacity: 0;
-                }
-                
-                .menu-toggle.active span:nth-child(3) {
-                    transform: rotate(-45deg) translate(6px, -6px);
-                }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        menuButton.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            menuButton.classList.toggle('active');
+        // Close menu when clicking nav links
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeMenu);
         });
         
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (!navbar.contains(e.target)) {
-                navMenu.classList.remove('active');
-                menuButton.classList.remove('active');
+            if (!menuToggle.contains(e.target) && !navLinks.contains(e.target)) {
+                closeMenu();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 767) {
+                closeMenu();
             }
         });
     };
     
-    createMobileMenu();
+    initMobileMenu();
     
     // Image lazy loading
     const lazyLoadImages = () => {
