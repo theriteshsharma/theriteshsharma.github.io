@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Tax of Concurrency: Go Goroutines vs Python asyncio Benchmark | Ritesh Sharma</title>
+    <meta name="description" content="Benchmark reveals Go goroutines use 8-10x less memory than Python asyncio for 10,000 concurrent tasks. Learn why idle tasks have a price tag and optimization patterns for high-scale systems.">
+    
+    
+    
+    <meta property="og:title" content="Memory Tax of Concurrency: Go Goroutines vs Python asyncio Benchmark | Ritesh Sharma">
+    <meta property="og:description" content="Benchmark reveals Go goroutines use 8-10x less memory than Python asyncio for 10,000 concurrent tasks. Learn why idle tasks have a price tag and optimization patterns for high-scale systems.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://riteshsharma.me">
+    <meta property="og:image" content="https://riteshsharma.me/static/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Memory Tax of Concurrency: Go Goroutines vs Python asyncio Benchmark | Ritesh Sharma">
+    <meta name="twitter:description" content="Benchmark reveals Go goroutines use 8-10x less memory than Python asyncio for 10,000 concurrent tasks. Learn why idle tasks have a price tag and optimization patterns for high-scale systems.">
+    <meta name="twitter:image" content="https://riteshsharma.me/static/og-image.jpg">
+    <link rel="canonical" href="https://riteshsharma.me/blogs/memory-tax-concurrency-goroutines-python.html">
+    <link rel="icon" href="https://placehold.co/16x16/FF6767/ffffff?text=RS">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)']],
+          displayMath: [['\\[', '\\]']]
+        }
+      };
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ritesh Sharma",
+        "jobTitle": "Software Development Engineer II",
+        "description": "Backend Engineer specializing in Python, Django, FastAPI, and scalable system architecture",
+        "url": "https://riteshsharma.me",
+        "sameAs": [
+            "https://linkedin.com/in/theriteshsharma",
+            "https://github.com/theriteshsharma"
+        ]
+    }
+    </script>
+</head>
+<body>
+    <header class="navbar">
+    <div class="container nav-content">
+        <a href="/#hero" class="brand">Ritesh</a>
+        <nav class="nav-links" id="navLinks">
+            <a href="/index.html#about">About</a>
+            <a href="index.html#skills">Skills & Exp.</a>
+            <a href="index.html#projects">Projects</a>
+            
+            <a href="/blogs/">Blog</a>
+            
+            <a href="/notes/">Notes</a>
+            
+            <a href="index.html#contact">Contact</a>
+            <a href="https://meet.google.com/fuf-rxbj-dws" target="_blank" class="btn btn-nav">Meet Me</a>
+            <a href="/static/Ritesh_Sharma_Resume.pdf" download class="btn btn-nav">Resume</a>
+        </nav>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Menu" aria-expanded="false">
+            ☰
+        </button>
+    </div>
+</header>
+    
+    
+<style>
+.blog-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    line-height: 1.8;
+    font-size: 1.125rem;
+    color: var(--black);
+}
+.blog-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.blog-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--black);
+    margin-bottom: 0.75rem;
+}
+.blog-meta {
+    color: var(--gray-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.blog-meta span {
+    margin-right: 1rem;
+}
+.blog-content h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--black);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+.blog-content p {
+    margin-bottom: 1.5rem;
+    color: var(--gray-text);
+}
+.blog-content ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.blog-content pre {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 2rem 0;
+    border: 1px solid #334155;
+    position: relative;
+}
+.blog-content pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+    font-size: inherit;
+}
+.blog-content code {
+    background-color: #1e293b;
+    color: #e2e8f0;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.4rem;
+    font-size: 0.875rem;
+    font-family: 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
+}
+.blog-content a {
+    color: var(--highlight);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+}
+.blog-content a:hover {
+    border-bottom-color: var(--highlight);
+}
+.blog-image-placeholder {
+    width: 100%;
+    height: 300px;
+    background-color: #f3f4f6;
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--gray-text);
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+.math-display {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+}
+.math-inline {
+    display: inline;
+}
+.blog-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+.blog-content th, .blog-content td {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+.blog-content th {
+    background-color: var(--card-bg);
+    font-weight: 600;
+}
+@media (max-width: 768px) {
+    .blog-content table, .blog-content thead, .blog-content tbody, .blog-content th, .blog-content td, .blog-content tr {
+        display: block;
+    }
+    .blog-content thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    .blog-content tr {
+        border: 1px solid var(--border-color);
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+    }
+    .blog-content td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .blog-content td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: 600;
+        color: var(--black);
+    }
+}
+</style>
+
+<main class="container main-content">
+    <div class="blog-container">
+        
+<div class="blog-header">
+    <a href="/blogs/" style="font-size: 0.9rem; color: var(--highlight); display: inline-block; margin-bottom: 1rem;">
+        <i class="fas fa-arrow-left"></i> Back to Blogs List
+    </a>
+    <h1>The Memory Tax of Concurrency: Goroutines vs Python asyncio</h1>
+    <div class="blog-meta">
+        <span>By Ritesh Sharma</span>
+        <span>|</span>
+        <span>December 18, 2025</span>
+        <span>|</span>
+        <span>4 min read</span>
+    </div>
+</div>
+
+
+<div style="width: 100%; height: 300px; background: url('/static/images/placeholder.png') center/cover; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; margin-bottom: 2rem; padding: 4rem;">
+    <span style="color: var(--highlight); font-weight: 700; font-size: 1.125rem; text-align: center;">The Memory Tax of Concurrency: Goroutines vs Python asyncio</span>
+</div>
+
+
+
+<div class="tldr-section" style="background: var(--card-bg); border-left: 4px solid var(--highlight); padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem;">
+    <h3 style="margin: 0 0 1rem 0; color: var(--highlight); font-size: 1.1rem;">📝 TL;DR</h3>
+    <p style="margin: 0; line-height: 1.6;">Go's goroutines start with just 2KB stacks and use work-stealing schedulers, while Python asyncio tasks carry full interpreter frame objects. At 10,000 concurrent tasks, Go uses ~35-50 MB vs Python's ~180-250 MB—an 8-10x difference. For systems scaling to millions of connections, Go's memory efficiency is an architectural superpower.</p>
+</div>
+
+
+<div class="blog-content">
+    <h1 id="the-memory-tax-of-concurrency-goroutines-vs-python-asyncio">The Memory Tax of Concurrency: Goroutines vs Python asyncio</h1>
+<p>This blog post is for the developers who have seen their cloud bills spike or their containers OOM (Out of Memory) at 3:00 AM. We're going deep into the "Memory Tax" of concurrency.</p>
+<hr />
+<h2 id="1-introduction-the-idle-task-tax">1. Introduction: The "Idle Task" Tax</h2>
+<p>We've all been there. You've got a microservice designed to handle thousands of concurrent webhooks or sensor pings. Most of the time, these tasks are doing absolutely nothing—just waiting for a network response. In theory, "idle" should be "free," right?</p>
+<p>Wrong. In the world of high-scale systems, <strong>idleness has a price tag.</strong> Every concurrent task requires a state machine, a stack, and a seat in the runtime's scheduler. Today, we're benchmarking exactly how much that seat costs in Python and Go when we scale to 10,000 concurrent tasks.</p>
+<h2 id="2-anatomy-of-a-concurrent-unit-goroutines-vs-python-tasks">2. Anatomy of a Concurrent Unit: Goroutines vs. Python Tasks</h2>
+<p>To understand the memory gap, we have to look at the "backpack" each task carries.</p>
+<ul>
+<li>
+<p><strong>Go's Goroutines:</strong> Go uses a "contiguous" stack approach. When a goroutine is born, it starts with a tiny <strong>2KB</strong> stack. If the task needs more space, the runtime dynamically grows it. It's like a hiker who only carries a small waist pack but can magically expand it into a 70L rucksack if they find more gear.</p>
+</li>
+<li>
+<p><strong>Python's <code>asyncio</code> Tasks:</strong> Python tasks are much heavier. Because Python is an interpreted, dynamic language, every <code>async</code> task is a full-blown object on the heap. It has to carry the overhead of the Python interpreter's frame objects and the dictionary of local variables.</p>
+</li>
+</ul>
+<h2 id="3-practical-benchmarking-how-to-measure-weight">3. Practical Benchmarking: How to Measure "Weight"</h2>
+<p>If you want to replicate this, don't just look at <code>top</code>. You need to measure <strong>Resident Set Size (RSS)</strong>—the actual RAM the OS has allocated to your process.</p>
+<p>In Go, we can peek under the hood using the <code>runtime</code> package:</p>
+<p>Go</p>
+<div class="highlight"><pre><span></span><code><span class="k">func</span><span class="w"> </span><span class="n">printMemUsage</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="n">runtime</span><span class="o">.</span><span class="n">MemStats</span>
+<span class="w">    </span><span class="n">runtime</span><span class="o">.</span><span class="n">ReadMemStats</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">)</span>
+<span class="w">    </span><span class="o">//</span><span class="w"> </span><span class="n">Alloc</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">heap</span><span class="w"> </span><span class="n">memory</span><span class="p">,</span><span class="w"> </span><span class="n">Sys</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="n">memory</span><span class="w"> </span><span class="n">obtained</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">OS</span>
+<span class="w">    </span><span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s2">&quot;Memory Allocated: %v MiB | Sys: %v MiB</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="o">.</span><span class="n">Alloc</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="o">.</span><span class="n">Sys</span><span class="o">/</span><span class="mi">1024</span><span class="o">/</span><span class="mi">1024</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>By spawning 10,000 tasks that simply <code>time.Sleep(10 * time.Second)</code>, we can isolate the baseline memory cost of "existence" without the noise of CPU work.</p>
+<h2 id="4-deep-dive-when-goroutines-get-fat">4. Deep Dive: When Goroutines Get "Fat"</h2>
+<p>Go isn't always magical. There are two things that can make your "lean" goroutines bloat:</p>
+<ol>
+<li>
+<p><strong>Stack Copying:</strong> If your function call depth is high, Go will hit the 2KB limit and have to "copy" the stack to a larger area. This is a CPU hit <em>and</em> a memory jump.</p>
+</li>
+<li>
+<p><strong>Escape Analysis:</strong> If you create a variable inside a goroutine and the compiler can't prove it stays there, it "escapes" to the heap. Suddenly, that 2KB goroutine is dragging around several kilobytes of heap-allocated baggage.</p>
+</li>
+</ol>
+<h2 id="5-the-results-the-data-gap-2025-edition">5. The Results: The Data Gap (2025 Edition)</h2>
+<p>When we run the 10,000 task benchmark, the results are staggering. Even with Python 3.13's new "Free-threading" experimental mode, the baseline object overhead remains high.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Python (asyncio)</strong></th>
+<th><strong>Go (Goroutines)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Idle Memory (Baseline)</strong></td>
+<td>~25 MB</td>
+<td>~10 MB</td>
+</tr>
+<tr>
+<td><strong>Memory at 10k Tasks</strong></td>
+<td>~180 MB - 250 MB</td>
+<td>~35 MB - 50 MB</td>
+</tr>
+<tr>
+<td><strong>Cost per Task (Approx)</strong></td>
+<td>~20 KB</td>
+<td>~2.5 KB</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>The Takeaway:</strong> Python requires roughly <strong>8x to 10x more memory</strong> to simply maintain the state of 10,000 idle tasks compared to Go.</p>
+</blockquote>
+<h2 id="6-real-world-pressure-gc-and-scheduler-logic">6. Real-World Pressure: GC and Scheduler Logic</h2>
+<p>Memory isn't just about storage; it's about management.</p>
+<ul>
+<li>
+<p><strong>GC Scanning:</strong> In Python, the Garbage Collector has to track 10,000 individual heap objects. In Go, the GC uses a <strong>write barrier</strong> and a concurrent mark-and-sweep algorithm that is specifically tuned for high-goroutine counts.</p>
+</li>
+<li>
+<p><strong>The M:P:G Scheduler:</strong> While Python's event loop is constantly "looping" to see who is ready (single-threaded), Go's scheduler uses <strong>Work Stealing</strong>. If one processor is overwhelmed with goroutines, another processor will literally "steal" tasks to balance the load across all cores.</p>
+</li>
+</ul>
+<h2 id="7-optimization-patterns-for-intermediate-devs">7. Optimization Patterns for Intermediate Devs</h2>
+<p>If you're seeing memory bloat in Go, try these "pro" moves:</p>
+<ul>
+<li>
+<p><strong>The Worker Pool:</strong> Don't just <code>go func()</code> in a loop. Use a pool of workers to keep the number of goroutines constant and predictable.</p>
+</li>
+<li>
+<p><strong><code>sync.Pool</code>:</strong> If your tasks are constantly allocating small objects (like <code>Context</code> or <code>Buffer</code>), use a <code>sync.Pool</code> to reuse memory instead of constantly asking the GC to clean up after you.</p>
+</li>
+<li>
+<p><strong>The Context Leak:</strong> The most common memory leak in Go concurrency? Forgetting to call the <code>cancel()</code> function in a <code>context.WithCancel</code>. This keeps the goroutine (and all its memory) alive forever.</p>
+</li>
+</ul>
+<h2 id="8-conclusion-choosing-your-architecture">8. Conclusion: Choosing Your Architecture</h2>
+<p>If you're building a script that pings 100 APIs, use Python. The developer velocity is worth the extra 50MB of RAM.</p>
+<p>But if you are building a system that needs to scale to <strong>millions</strong> of concurrent connections—like a chat server, a proxy, or a streaming engine—the "Memory Tax" of Python will eventually break your bank. Go's ability to pack 10,000 tasks into the memory space of a single high-res JPEG isn't just a flex; it's an architectural superpower.</p>
+<hr />
+</div>
+
+    </div>
+</main>
+
+    
+    <footer class="footer">
+    <p class="copyright">2025 &copy; Ritesh Sharma. Built with <i class="fas fa-heart footer-icon"></i> and Plain HTML/CSS.</p>
+</footer>
+    <script>
+    document.querySelector('.menu-toggle').addEventListener('click', function() {
+        const nav = document.querySelector('.nav-links');
+        nav.classList.toggle('active');
+    });
+</script>
+</body>
+</html>

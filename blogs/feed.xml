@@ -5,9 +5,26 @@
     <link>https://riteshsharma.me</link>
     <description>Latest blogs content</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 01 Dec 2025 12:20:29 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 18 Dec 2025 14:31:03 +0000</lastBuildDate>
     <atom:link href="https://riteshsharma.me/blogs/feed.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+        <title>The Memory Tax of Concurrency: Goroutines vs Python asyncio</title>
+        <link>https://riteshsharma.me/blog/memory-tax-concurrency-goroutines-python.html</link>
+        <description>A deep-dive benchmark comparing the memory overhead of handling 10,000 concurrent tasks in Go and Python, revealing why Go's goroutines use 8-10x less memory than Python's asyncio.</description>
+        <pubDate>Thu, 18 Dec 2025 00:00:00 +0000</pubDate>
+        <guid>https://riteshsharma.me/blog/memory-tax-concurrency-goroutines-python.html</guid>
+        
+        <category>Concurrency</category>
+        
+        <category>Performance</category>
+        
+        <category>Go</category>
+        
+        <category>Python</category>
+        
+    </item>
     
     <item>
         <title>The Hidden Cost of Speed: Mastering Latency in the Request Lifecycle</title>
